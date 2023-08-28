@@ -1,17 +1,61 @@
-from bokeh.plotting import figure
-from bokeh.models import ColumnDataSource
-from bokeh.io import output_notebook, push_notebook
-import streamlit.bokeh_support as st_bokeh
+import dash
+from dash import dcc
+from dash import html
+from dash.dependencies import Input, Output
+import pandas as pd
+from xbbg import blp
+import os
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import pathlib
+from datetime import datetime, date, timedelta
+import hvplot.pandas
+import holoviews as hv 
+hv.extension('bokeh')
+import win32com.client as win32
+import streamlit as st
+import requests
 
-# US Yield Curve Chart
-US_curve_source = ColumnDataSource(data=UScurvechart)
-US_chart = figure(x_axis_label='Maturity', y_axis_label='Yield', title='US Yield Curve ' + str(date.today()),
-                  width=900, height=500, tools='', x_range=UScurvechart.index.tolist())
-US_chart.line(x='index', y='Today', line_width=2, source=US_curve_source, legend_label='Today', line_color="#22A6A3")
-US_chart.line(x='index', y='Three Days', line_width=2, source=US_curve_source, legend_label='Three Days', line_dash='dashed', line_color="#595959")
-US_chart.line(x='index', y='Week', line_width=2, source=US_curve_source, legend_label='Week', line_dash='dashed', line_color="#A5A5A5")
-US_chart.line(x='index', y='Month', line_width=2, source=US_curve_source, legend_label='Month', line_dash='dashed', line_color="#D9D9D9")
-US_chart.legend.location = "top_right"
+app = dash.Dash(__name__)
 
-# Display the chart using Streamlit's bokeh_chart function
-st.bokeh_chart(US_chart)
+UStickers = ['USGG3M Index', 'USGG6M Index', 'USGG12M Index',
+            'USGG2YR Index', 'USGG3Y Index', 'USGG5YR Index',
+            'USGG7Y Index', 'USGG10Y Index', 'USGG20Y Index', 'USGG30Y Index']
+
+app.layout = html.Div([
+    html.H1("US Yield Curve"),
+    dcc.Graph(id='us-yield-curve-graph'),
+])
+
+@app.callback(
+    Output('us-yield-curve-graph', 'figure'),
+    [Input('interval-component', 'n_intervals')]
+)
+def update_yield_curve(n):
+    today = datetime.date.today()
+    start_date = (today - datetime.timedelta(days=33)).strftime("%Y-%m-%d")
+
+    UStoday = blp.bdh(tickers=UStickers, flds=['PX_LAST'], start_date=start_date, end_date=today).tail(1)
+    UScurvechart = UStoday.transpose()
+
+    figure = {
+        'data': [
+            {'x': UScurvechart.index, 'y': UScurvechart.iloc[0], 'type': 'line', 'name': 'Today'},
+        ],
+        'layout': {
+            'title': 'US Yield Curve ' + str(datetime.date.today()),
+            'xaxis': {'title': 'Maturity'},
+            'yaxis': {'title': 'Yield'},
+            'grid': True,
+            'width': 900,
+            'height': 500,
+            'font': {'size': 15},
+            'line_dash': ['solid'],
+        }
+    }
+
+    return figure
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
