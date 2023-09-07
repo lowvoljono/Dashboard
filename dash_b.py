@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import pathlib
 from datetime import datetime, date, timedelta
 from xbbg import blp
@@ -11,14 +11,6 @@ hv.extension('bokeh')
 import win32com.client as win32
 import streamlit as st
 import requests
-# from holoviews import opts, dim
-# from bokeh.plotting import show, output_file
-
-from bokeh.plotting import figure
-from bokeh.models import ColumnDataSource
-from bokeh.io import output_notebook, push_notebook
-# US Yield Curve Chart
-#get tickers for US, EU and AU from Bloomberg
 
 UStickers =['USGG3M Index','USGG6M Index', 'USGG12M Index', 
             'USGG2YR Index', 'USGG3Y Index', 'USGG5YR Index', 
